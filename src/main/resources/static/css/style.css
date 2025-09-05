@@ -1,0 +1,61 @@
+/* Global styles */
+body {
+    margin: 0;
+    font-family: "Poppins", sans-serif;
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    color: #333;
+}
+
+/* Center container */
+.container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+/* Card style */
+.card {
+    background: #fff;
+    padding: 2.5rem 3rem;
+    border-radius: 1.2rem;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    max-width: 420px;
+    width: 90%;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Hover effect */
+.card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+}
+
+/* Name */
+.name {
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #222;
+}
+
+/* Lab name */
+.lab {
+    font-size: 1.3rem;
+    font-weight: 500;
+    color: #2575fc;
+    margin: 0.3rem 0;
+}
+
+/* Subtitle */
+.subtitle {
+    font-size: 1rem;
+    color: #555;
+    margin-top: 0.8rem;
+}
+
