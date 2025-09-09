@@ -28,7 +28,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v4
         with:
           # The ARN of the IAM role created by CloudFormation for GitHub Actions
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubOidcRoleForEcr
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubOidcRoleForEcr-thenoblet-awslab
           aws-region: ${{ env.AWS_REGION }}
           # A descriptive name for the session in CloudTrail
           role-session-name: ECSPushFromGitHubActions
