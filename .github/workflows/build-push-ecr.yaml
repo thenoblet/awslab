@@ -1,0 +1,51 @@
+# .github/workflows/build-push-ecr.yml
+
+name: Build and Push to Amazon ECR
+
+# This workflow runs on pushes to the main branch
+on:
+  push:
+    branches: ["main"]
+
+# These permissions are necessary for OIDC authentication with AWS
+permissions:
+  id-token: write # Required for requesting the JWT
+  contents: read # Required for checking out the code
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+
+    env:
+      AWS_REGION: "eu-central-1"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          # The ARN of the IAM role created by CloudFormation for GitHub Actions
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubOidcRoleForEcr
+          aws-region: ${{ env.AWS_REGION }}
+          # A descriptive name for the session in CloudTrail
+          role-session-name: ECSPushFromGitHubActions
+
+      - name: Log in to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build, tag, and push image to Amazon ECR
+        env:
+          # The ECR repository URI is constructed from the account ID, region, and repo name
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: "cicd-ecr-repo"
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          # Also tag and push as 'latest' to easily trigger the deployment pipeline
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
