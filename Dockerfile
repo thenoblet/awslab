@@ -9,7 +9,7 @@ COPY src ./src
 RUN mvn package -DskipTests
 
 # Stage 2: Create the final lightweight image
-FROM amazoncorretto:21-alpine-jre
+FROM amazoncorretto:21-alpine
 WORKDIR /app
 # Copy the built JAR from the 'build' stage
 COPY --from=build /app/target/*.jar app.jar
