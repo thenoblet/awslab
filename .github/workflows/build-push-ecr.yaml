@@ -1,59 +1,104 @@
-# .github/workflows/build-push-ecr.yml
+# ------------------------------------------------------------------------------
+# GitHub Actions Workflow: Build and Push to Amazon ECR
+#
+# Author: Patrick Noblet (thenoblet)
+# Date:   09-09-2025
+#
+# Purpose:
+#   - On each push to the main branch, this workflow:
+#       1. Builds and tags a Docker image of the application.
+#       2. Pushes the image to Amazon Elastic Container Registry (ECR).
+#       3. Generates ECS task and deployment artifacts (taskdef.json, appspec.yml).
+#       4. Packages and uploads these artifacts to S3 for CodePipeline to consume.
+#
+# Notes:
+#   - Authentication to AWS is handled via OIDC (no long-lived AWS keys).
+#   - CodePipeline + EventBridge integration will automatically pick up the S3
+#     deployment package and proceed with ECS deployment.
+#   - IMAGE_TAG is pinned to the Git commit SHA for immutability, while 'latest'
+#     is used for ECS service updates.
+#
+# Security:
+#   - Requires a pre-configured IAM role (`GitHubOidcRoleForEcr-thenoblet-awslab`)
+#     which is created in the template (security.yaml) with ECR, ECS, and S3 permissions.
+#   - OIDC avoids the need to store static AWS credentials in GitHub Secrets.
+#
+# ------------------------------------------------------------------------------
+
 name: Build and Push to Amazon ECR
-# This workflow runs on pushes to the main branch
+
 on:
   push:
-    branches: ["main"]
-# These permissions are necessary for OIDC authentication with AWS
+    branches: ["main"] # Trigger only on pushes to main branch
+
 permissions:
-  id-token: write # Required for requesting the JWT
-  contents: read # Required for checking out the code
+  id-token: write # Required for AWS OIDC federation
+  contents: read # Read repository contents
 
 jobs:
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+
     env:
-      AWS_REGION: "eu-central-1"
-      ECR_REPOSITORY: "cicd-ecr-repo"
-      S3_BUCKET: "artif-bkt"
-      ECS_TASK_DEFINITION: "CICD-ECS-STK-task"
-      CONTAINER_NAME: "awslab-app-container"
+      AWS_REGION: "eu-central-1" # Deployment region
+      ECR_REPOSITORY: "cicd-ecr-repo" # ECR repository for app images
+      S3_BUCKET: "artif-bkt" # S3 bucket storing deployment artifacts
+      ECS_TASK_DEFINITION: "CICD-ECS-STK-task" # ECS task definition family name
+      CONTAINER_NAME: "awslab-app-container" # Container name inside ECS service
+
     steps:
+      # ------------------------------
+      # Step 1: Checkout source code
+      # ------------------------------
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # ----------------------------------------------------
+      # Step 2: Authenticate to AWS using OIDC federation
+      # - Eliminates static AWS credentials in GitHub Secrets
+      # - Assumes a role with the required permissions
+      # ----------------------------------------------------
       - name: Configure AWS Credentials using OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          # The ARN of the IAM role created by CloudFormation for GitHub Actions
           role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/GitHubOidcRoleForEcr-thenoblet-awslab
           aws-region: ${{ env.AWS_REGION }}
-          # A descriptive name for the session in CloudTrail
           role-session-name: ECSPushFromGitHubActions
 
+      # ------------------------------
+      # Step 3: Log in to Amazon ECR
+      # ------------------------------
       - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      # ---------------------------------------------------------
+      # Step 4: Build, tag, and push image to ECR
+      # - Image tagged with commit SHA (immutable history).
+      # - Also tagged as 'latest' for ECS deployment updates.
+      # ---------------------------------------------------------
       - name: Build, tag, and push image to Amazon ECR
         id: build-image
         env:
-          # The ECR repository URI is constructed from the account ID, region, and repo name
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # Build and push with commit SHA
+          # Build image with commit SHA
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
 
-          # Also tag and push as 'latest' to trigger the deployment pipeline
+          # Tag and push as 'latest' (ECS always pulls latest)
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
 
-          # Output the image URI for later steps
+          # Export the latest image URI for downstream steps
           echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >> $GITHUB_OUTPUT
 
-      # NEW STEPS: Create deployment files for CodePipeline
+      # -----------------------------------------------------------------
+      # Step 5: Retrieve ECS Task Execution Role ARN from CloudFormation
+      # - Required for the task definition JSON (executionRoleArn).
+      # - Dynamically fetched to avoid hardcoding role ARNs in workflow.
+      # -----------------------------------------------------------------
       - name: Get ECS Task Execution Role ARN
         id: get-execution-role
         run: |
@@ -64,12 +109,18 @@ jobs:
             --output text)
           echo "execution-role-arn=$EXECUTION_ROLE_ARN" >> $GITHUB_OUTPUT
 
+      # ------------------------------------------------------------------
+      # Step 6: Generate deployment files for CodePipeline/CodeDeploy
+      # - appspec.yml: Defines ECS service update (container/port mapping).
+      # - taskdef.json: Defines ECS task (CPU, memory, container image).
+      # - imageDetail.json: Helps CodePipeline/ECR integration.
+      # ------------------------------------------------------------------
       - name: Create deployment files
         env:
           IMAGE_URI: ${{ steps.build-image.outputs.image-uri }}
           EXECUTION_ROLE_ARN: ${{ steps.get-execution-role.outputs.execution-role-arn }}
         run: |
-          # Create appspec.yml for CodeDeploy
+          # CodeDeploy AppSpec
           cat > appspec.yml << 'EOF'
           version: 0.0
           Resources:
@@ -82,7 +133,7 @@ jobs:
                     ContainerPort: 8080
           EOF
 
-          # Create taskdef.json for ECS task definition
+          # ECS Task Definition JSON
           cat > taskdef.json << EOF
           {
             "family": "${{ env.ECS_TASK_DEFINITION }}",
@@ -107,7 +158,7 @@ jobs:
           }
           EOF
 
-          # Create imageDetail.json for CodePipeline ECR integration
+          # CodePipeline/ECR image details
           cat > imageDetail.json << EOF
           {
             "ImageURI": "$IMAGE_URI"
@@ -117,28 +168,25 @@ jobs:
           echo "Created deployment files:"
           ls -la *.yml *.json
 
-      # - name: Upload deployment files to S3
-      #   run: |
-      #     # Upload individual files to S3 bucket root (where ECR source expects them)
-      #     aws s3 cp appspec.yml s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-      #     aws s3 cp taskdef.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-      #     aws s3 cp imageDetail.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-      #
-      #     echo "Uploaded deployment files to S3 bucket: ${{ env.S3_BUCKET }}"
-
+      # --------------------------------------------------------------------
+      # Step 7: Package deployment artifacts and upload to S3
+      # - CodePipeline is configured to poll or be triggered by EventBridge.
+      # - S3 location is the integration point for pipeline execution.
+      # --------------------------------------------------------------------
       - name: Create and upload deployment zip for CodePipeline
         run: |
-          # Create the zip file that CodePipeline expects
           zip deployment-files.zip appspec.yml taskdef.json imageDetail.json
 
-          # Upload to the exact location CodePipeline is looking for
           aws s3 cp deployment-files.zip s3://${{ env.S3_BUCKET }}/deployment-files.zip --region ${{ env.AWS_REGION }}
 
           echo "Uploaded deployment zip for CodePipeline to: s3://${{ env.S3_BUCKET }}/deployment-files.zip"
 
-          # Verify upload
           aws s3 ls s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
 
+      # ---------------------------------------------------------
+      # Step 8: Deployment summary
+      # - Prints a human-readable summary for CI/CD visibility.
+      # ---------------------------------------------------------
       - name: Deployment Summary
         run: |
           echo "🚀 Deployment Summary:"
