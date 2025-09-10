@@ -1,61 +1,220 @@
 /* Global styles */
+* {
+  box-sizing: border-box;
+}
+
 body {
-    margin: 0;
-    font-family: "Poppins", sans-serif;
-    background: linear-gradient(135deg, #6a11cb, #2575fc);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    color: #333;
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  background: #0a0a0a;
+  background-image:
+    radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(120, 200, 255, 0.1) 0%, transparent 50%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Animated background elements */
+body::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background:
+    linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.02) 50%, transparent 70%);
+  animation: shimmer 8s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+
+  0%,
+  100% {
+    transform: translateX(-100%);
+  }
+
+  50% {
+    transform: translateX(100%);
+  }
 }
 
 /* Center container */
 .container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  z-index: 1;
 }
 
 /* Card style */
 .card {
-    background: #fff;
-    padding: 2.5rem 3rem;
-    border-radius: 1.2rem;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
-    text-align: center;
-    max-width: 420px;
-    width: 90%;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 3rem 3.5rem;
+  border-radius: 2rem;
+  text-align: center;
+  max-width: 480px;
+  width: 90%;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Card glow effect */
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg,
+      rgba(120, 119, 198, 0.1) 0%,
+      transparent 50%,
+      rgba(255, 119, 198, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
 }
 
 /* Hover effect */
 .card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+  transform: translateY(-12px) scale(1.02);
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.4),
+    0 0 100px rgba(120, 119, 198, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.card:hover::before {
+  opacity: 1;
 }
 
 /* Name */
 .name {
-    font-size: 2rem;
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #222;
+  font-size: 2.2rem;
+  font-weight: 600;
+  margin-bottom: 0.8rem;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
 }
 
 /* Lab name */
 .lab {
-    font-size: 1.3rem;
-    font-weight: 500;
-    color: #2575fc;
-    margin: 0.3rem 0;
+  font-size: 1.4rem;
+  font-weight: 500;
+  background: linear-gradient(135deg, #7877c6 0%, #ff77c6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin: 1rem 0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  position: relative;
+}
+
+.lab::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #7877c6, #ff77c6, transparent);
+  border-radius: 2px;
 }
 
 /* Subtitle */
 .subtitle {
-    font-size: 1rem;
-    color: #555;
-    margin-top: 0.8rem;
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 1.2rem 0 0.6rem 0;
+  line-height: 1.6;
+  font-weight: 400;
+  transition: color 0.3s ease;
 }
 
+.card:hover .subtitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Floating particles effect */
+.particle {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.particle:nth-child(1) {
+  top: 20%;
+  left: 10%;
+  animation: float 6s ease-in-out infinite;
+}
+
+.particle:nth-child(2) {
+  top: 60%;
+  right: 15%;
+  animation: float 4s ease-in-out infinite reverse;
+}
+
+.particle:nth-child(3) {
+  bottom: 30%;
+  left: 20%;
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.3;
+  }
+
+  50% {
+    transform: translateY(-20px) rotate(180deg);
+    opacity: 0.8;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+  .card {
+    padding: 2.5rem 2rem;
+    border-radius: 1.5rem;
+  }
+
+  .name {
+    font-size: 1.8rem;
+  }
+
+  .lab {
+    font-size: 1.2rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+}
