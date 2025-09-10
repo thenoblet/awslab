@@ -16,7 +16,7 @@ jobs:
     env:
       AWS_REGION: "eu-central-1"
       ECR_REPOSITORY: "cicd-ecr-repo"
-      S3_BUCKET: "cicd-pipeline-stack-artifactbucket-qergymdmqk8q"
+      S3_BUCKET: "artif-bkt"
       ECS_TASK_DEFINITION: "CICD-ECS-STK-task"
       CONTAINER_NAME: "awslab-app-container"
     steps:
