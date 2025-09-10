@@ -45,7 +45,6 @@ jobs:
         run: |
           # Build and push with commit SHA
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
 
           # Also tag and push as 'latest' to trigger the deployment pipeline
           docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $ECR_REGISTRY/$ECR_REPOSITORY:latest
@@ -118,14 +117,14 @@ jobs:
           echo "Created deployment files:"
           ls -la *.yml *.json
 
-      - name: Upload deployment files to S3
-        run: |
-          # Upload individual files to S3 bucket root (where ECR source expects them)
-          aws s3 cp appspec.yml s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-          aws s3 cp taskdef.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-          aws s3 cp imageDetail.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-
-          echo "Uploaded deployment files to S3 bucket: ${{ env.S3_BUCKET }}"
+      # - name: Upload deployment files to S3
+      #   run: |
+      #     # Upload individual files to S3 bucket root (where ECR source expects them)
+      #     aws s3 cp appspec.yml s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
+      #     aws s3 cp taskdef.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
+      #     aws s3 cp imageDetail.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
+      #
+      #     echo "Uploaded deployment files to S3 bucket: ${{ env.S3_BUCKET }}"
 
       - name: Create and upload deployment zip for CodePipeline
         run: |
