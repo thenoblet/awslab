@@ -95,7 +95,7 @@ jobs:
             "containerDefinitions": [
               {
                 "name": "${{ env.CONTAINER_NAME }}",
-                "image": "$IMAGE_URI",
+                "image": "${IMAGE_URI}",
                 "essential": true,
                 "portMappings": [
                   {
