@@ -115,6 +115,7 @@ body::before {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   position: relative;
+  white-space: nowrap;
 }
 
 /* Lab name */
@@ -208,6 +209,7 @@ body::before {
 
   .name {
     font-size: 1.8rem;
+    white-space: normal;
   }
 
   .lab {
@@ -216,5 +218,13 @@ body::before {
 
   .subtitle {
     font-size: 0.9rem;
+  }
+}
+
+/* For very small screens, allow wrapping */
+@media (max-width: 400px) {
+  .name {
+    white-space: normal;
+    font-size: 1.6rem;
   }
 }
