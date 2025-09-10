@@ -54,91 +54,91 @@ jobs:
           # Output the image URI for later steps
           echo "image-uri=$ECR_REGISTRY/$ECR_REPOSITORY:latest" >> $GITHUB_OUTPUT
 
-      # NEW STEPS: Create deployment files for CodePipeline
-      - name: Get ECS Task Execution Role ARN
-        id: get-execution-role
-        run: |
-          EXECUTION_ROLE_ARN=$(aws cloudformation describe-stack-resources \
-            --stack-name "CICD-ECS-CLUSTER-STACK" \
-            --region ${{ env.AWS_REGION }} \
-            --query 'StackResources[?LogicalResourceId==`ECSTaskExecutionRole`].PhysicalResourceId' \
-            --output text)
-          echo "execution-role-arn=$EXECUTION_ROLE_ARN" >> $GITHUB_OUTPUT
-
-      - name: Create deployment files
-        env:
-          IMAGE_URI: ${{ steps.build-image.outputs.image-uri }}
-          EXECUTION_ROLE_ARN: ${{ steps.get-execution-role.outputs.execution-role-arn }}
-        run: |
-          # Create appspec.yml for CodeDeploy
-          cat > appspec.yml << 'EOF'
-          version: 0.0
-          Resources:
-            - TargetService:
-                Type: AWS::ECS::Service
-                Properties:
-                  TaskDefinition: <TASK_DEFINITION>
-                  LoadBalancerInfo:
-                    ContainerName: "awslab-app-container"
-                    ContainerPort: 8080
-          EOF
-
-          # Create taskdef.json for ECS task definition
-          cat > taskdef.json << EOF
-          {
-            "family": "${{ env.ECS_TASK_DEFINITION }}",
-            "networkMode": "awsvpc",
-            "requiresCompatibilities": ["FARGATE"],
-            "cpu": "256",
-            "memory": "512",
-            "executionRoleArn": "$EXECUTION_ROLE_ARN",
-            "containerDefinitions": [
-              {
-                "name": "${{ env.CONTAINER_NAME }}",
-                "image": "$IMAGE_URI",
-                "essential": true,
-                "portMappings": [
-                  {
-                    "containerPort": 8080,
-                    "protocol": "tcp"
-                  }
-                ]
-              }
-            ]
-          }
-          EOF
-
-          # Create imageDetail.json for CodePipeline ECR integration
-          cat > imageDetail.json << EOF
-          {
-            "ImageURI": "$IMAGE_URI"
-          }
-          EOF
-
-          echo "Created deployment files:"
-          ls -la *.yml *.json
-
-      - name: Upload deployment files to S3
-        run: |
-          # Upload individual files to S3 bucket root (where ECR source expects them)
-          aws s3 cp appspec.yml s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-          aws s3 cp taskdef.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-          aws s3 cp imageDetail.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
-
-          echo "Uploaded deployment files to S3 bucket: ${{ env.S3_BUCKET }}"
-
-      - name: Create and upload deployment zip for CodePipeline
-        run: |
-          # Create the zip file that CodePipeline expects
-          zip deployment-files.zip appspec.yml taskdef.json imageDetail.json  
-
-          # Upload to the exact location CodePipeline is looking for
-          aws s3 cp deployment-files.zip s3://${{ env.S3_BUCKET }}/deployment-files.zip --region ${{ env.AWS_REGION }}
-
-          echo "Uploaded deployment zip for CodePipeline to: s3://${{ env.S3_BUCKET }}/deployment-files.zip"
-
-          # Verify upload
-          aws s3 ls s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
+      # # NEW STEPS: Create deployment files for CodePipeline
+      # - name: Get ECS Task Execution Role ARN
+      #   id: get-execution-role
+      #   run: |
+      #     EXECUTION_ROLE_ARN=$(aws cloudformation describe-stack-resources \
+      #       --stack-name "CICD-ECS-CLUSTER-STACK" \
+      #       --region ${{ env.AWS_REGION }} \
+      #       --query 'StackResources[?LogicalResourceId==`ECSTaskExecutionRole`].PhysicalResourceId' \
+      #       --output text)
+      #     echo "execution-role-arn=$EXECUTION_ROLE_ARN" >> $GITHUB_OUTPUT
+      #
+      # - name: Create deployment files
+      #   env:
+      #     IMAGE_URI: ${{ steps.build-image.outputs.image-uri }}
+      #     EXECUTION_ROLE_ARN: ${{ steps.get-execution-role.outputs.execution-role-arn }}
+      #   run: |
+      #     # Create appspec.yml for CodeDeploy
+      #     cat > appspec.yml << 'EOF'
+      #     version: 0.0
+      #     Resources:
+      #       - TargetService:
+      #           Type: AWS::ECS::Service
+      #           Properties:
+      #             TaskDefinition: <TASK_DEFINITION>
+      #             LoadBalancerInfo:
+      #               ContainerName: "awslab-app-container"
+      #               ContainerPort: 8080
+      #     EOF
+      #
+      #     # Create taskdef.json for ECS task definition
+      #     cat > taskdef.json << EOF
+      #     {
+      #       "family": "${{ env.ECS_TASK_DEFINITION }}",
+      #       "networkMode": "awsvpc",
+      #       "requiresCompatibilities": ["FARGATE"],
+      #       "cpu": "256",
+      #       "memory": "512",
+      #       "executionRoleArn": "$EXECUTION_ROLE_ARN",
+      #       "containerDefinitions": [
+      #         {
+      #           "name": "${{ env.CONTAINER_NAME }}",
+      #           "image": "$IMAGE_URI",
+      #           "essential": true,
+      #           "portMappings": [
+      #             {
+      #               "containerPort": 8080,
+      #               "protocol": "tcp"
+      #             }
+      #           ]
+      #         }
+      #       ]
+      #     }
+      #     EOF
+      #
+      #     # Create imageDetail.json for CodePipeline ECR integration
+      #     cat > imageDetail.json << EOF
+      #     {
+      #       "ImageURI": "$IMAGE_URI"
+      #     }
+      #     EOF
+      #
+      #     echo "Created deployment files:"
+      #     ls -la *.yml *.json
+      #
+      # - name: Upload deployment files to S3
+      #   run: |
+      #     # Upload individual files to S3 bucket root (where ECR source expects them)
+      #     aws s3 cp appspec.yml s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
+      #     aws s3 cp taskdef.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
+      #     aws s3 cp imageDetail.json s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
+      #
+      #     echo "Uploaded deployment files to S3 bucket: ${{ env.S3_BUCKET }}"
+      #
+      # - name: Create and upload deployment zip for CodePipeline
+      #   run: |
+      #     # Create the zip file that CodePipeline expects
+      #     zip deployment-files.zip appspec.yml taskdef.json imageDetail.json
+      #
+      #     # Upload to the exact location CodePipeline is looking for
+      #     aws s3 cp deployment-files.zip s3://${{ env.S3_BUCKET }}/deployment-files.zip --region ${{ env.AWS_REGION }}
+      #
+      #     echo "Uploaded deployment zip for CodePipeline to: s3://${{ env.S3_BUCKET }}/deployment-files.zip"
+      #
+      #     # Verify upload
+      #     aws s3 ls s3://${{ env.S3_BUCKET }}/ --region ${{ env.AWS_REGION }}
 
       - name: Deployment Summary
         run: |
