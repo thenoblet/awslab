@@ -62,7 +62,7 @@ body::before {
   padding: 3rem 3.5rem;
   border-radius: 2rem;
   text-align: center;
-  max-width: 480px;
+  max-width: 600px;
   width: 90%;
   position: relative;
   overflow: hidden;
@@ -105,7 +105,7 @@ body::before {
 
 /* Name */
 .name {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 600;
   margin-bottom: 0.8rem;
   color: #ffffff;
@@ -208,7 +208,7 @@ body::before {
   }
 
   .name {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     white-space: normal;
   }
 
@@ -222,9 +222,9 @@ body::before {
 }
 
 /* For very small screens, allow wrapping */
-@media (max-width: 400px) {
+@media (max-width: 650px) {
   .name {
     white-space: normal;
-    font-size: 1.6rem;
+    font-size: 1.8rem;
   }
 }
