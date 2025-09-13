@@ -1,0 +1,11 @@
+# appspec.yaml
+
+version: 0.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: <TASK_DEFINITION>
+        LoadBalancerInfo:
+          ContainerName: "awslab-app-container"
+          ContainerPort: 8080
