@@ -7,5 +7,5 @@ Resources:
       Properties:
         TaskDefinition: <TASK_DEFINITION>
         LoadBalancerInfo:
-          ContainerName: "awslab-app-container"
+          ContainerName: <CONTAINER_NAME>
           ContainerPort: 8080
