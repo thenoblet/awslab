@@ -115,8 +115,8 @@ jobs:
           sed -i "s|<CONTAINER_NAME>|${{ env.CONTAINER_NAME }}|g" deploy/taskdef.json
           sed -i "s|<AWS_REGION>|${{ env.AWS_REGION }}|g" deploy/taskdef.json
 
-          sed -i "s|<TASK_DEFINITION>|${{ env.ECS_TASK_DEFINITION }}|g" deploy/appspec.yaml
-          sed -i "s|<CONTAINER_NAME>|${{ env.CONTAINER_NAME }}|g" deploy/appspec.yaml
+          sed -i "s|<TASK_DEFINITION>|${{ env.ECS_TASK_DEFINITION }}|g" deploy/appspec.yml
+          sed -i "s|<CONTAINER_NAME>|${{ env.CONTAINER_NAME }}|g" deploy/appspec.yml
 
           sed -i "s|<IMAGE_URI>|$IMAGE_URI|g" deploy/imageDetail.json
 
@@ -125,7 +125,7 @@ jobs:
       - name: Debug deploy files
         run: |
           echo "=== appspec.yaml ==="
-          cat deploy/appspec.yaml
+          cat deploy/appspec.yml
           echo "=== taskdef.json ==="
           cat deploy/taskdef.json
 
@@ -135,7 +135,7 @@ jobs:
       - name: Package and upload deployment files
         run: |
           cd deploy
-          zip ../deployment-files.zip appspec.yaml taskdef.json imageDetail.json
+          zip ../deployment-files.zip appspec.yml taskdef.json imageDetail.json
           cd ..
 
           aws s3 cp deployment-files.zip s3://${{ env.S3_BUCKET }}/deployment-files.zip --region ${{ env.AWS_REGION }}
