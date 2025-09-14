@@ -1,5 +1,5 @@
 {
-  "family": "${{ env.ECS_TASK_DEFINITION }}",
+  "family": "<TASK_DEFINITION>",
   "networkMode": "awsvpc",
   "requiresCompatibilities": [
     "FARGATE"
@@ -9,7 +9,7 @@
   "executionRoleArn": "<EXECUTION_ROLE_ARN>",
   "containerDefinitions": [
     {
-      "name": "${{ env.CONTAINER_NAME }}",
+      "name": "<CONTAINER_NAME>",
       "image": "<IMAGE_URI>",
       "essential": true,
       "portMappings": [
