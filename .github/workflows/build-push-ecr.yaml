@@ -100,7 +100,10 @@ jobs:
       # ------------------------------
       - name: Package and upload deployment files
         run: |
-          zip deployment-files.zip deploy/appspec.yaml deploy/taskdef.json deploy/imageDetail.json
+          cd deploy
+          zip ../deployment-files.zip appspec.yaml taskdef.json imageDetail.json
+          cd ..
+
           aws s3 cp deployment-files.zip s3://${{ env.S3_BUCKET }}/deployment-files.zip --region ${{ env.AWS_REGION }}
           echo "=> Uploaded deployment files to s3://${{ env.S3_BUCKET }}/deployment-files.zip"
 
