@@ -86,12 +86,12 @@ jobs:
           IMAGE_URI: ${{ steps.build-image.outputs.image-uri }}
           EXECUTION_ROLE_ARN: ${{ steps.get-execution-role.outputs.execution-role-arn }}
         run: |
-          sed -i "s|<IMAGE_URI>|$IMAGE_URI|g" deploy/taskdef.json
-          sed -i "s|<EXECUTION_ROLE_ARN>|$EXECUTION_ROLE_ARN|g" deploy/taskdef.json
+          sed -i "s|<IMAGE_URI>|$IMAGE_URI|g" .deploy/taskdef.json
+          sed -i "s|<EXECUTION_ROLE_ARN>|$EXECUTION_ROLE_ARN|g" .deploy/taskdef.json
 
-          sed -i "s|<TASK_DEFINITION>|${{ env.ECS_TASK_DEFINITION }}|g" deploy/appspec.yml
+          sed -i "s|<TASK_DEFINITION>|${{ env.ECS_TASK_DEFINITION }}|g" .deploy/appspec.yml
 
-          sed -i "s|<IMAGE_URI>|$IMAGE_URI|g" deploy/imageDetail.json
+          sed -i "s|<IMAGE_URI>|$IMAGE_URI|g" .deploy/imageDetail.json
 
           echo "=> Updated deploy files with placeholders."
 
@@ -100,7 +100,7 @@ jobs:
       # ------------------------------
       - name: Package and upload deployment files
         run: |
-          zip deployment-files.zip deploy/appspec.yml deploy/taskdef.json deploy/imageDetail.json
+          zip deployment-files.zip .deploy/appspec.yml .deploy/taskdef.json .deploy/imageDetail.json
           aws s3 cp deployment-files.zip s3://${{ env.S3_BUCKET }}/deployment-files.zip --region ${{ env.AWS_REGION }}
           echo "=> Uploaded deployment files to s3://${{ env.S3_BUCKET }}/deployment-files.zip"
 
