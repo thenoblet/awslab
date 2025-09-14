@@ -121,13 +121,6 @@ jobs:
 
           echo "=> Updated deploy files with placeholders."
 
-      - name: Debug deploy files
-        run: |
-          echo "=== appspec.yaml ==="
-          cat deploy/appspec.yml
-          echo "=== taskdef.json ==="
-          cat deploy/taskdef.json
-
       # ------------------------------
       # Step 7: Zip & Upload deploy files
       # ------------------------------
